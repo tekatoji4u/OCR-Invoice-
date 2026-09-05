@@ -110,6 +110,18 @@
   </div>
 </div>
 
+<script>
+// Hiển thị lỗi ngay trên trang nếu có script nào lỗi/không tải được,
+// thay vì để giao diện "đứng im" không rõ lý do.
+window.addEventListener('error', function(e){
+  var el = document.createElement('div');
+  el.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#d93025;color:#fff;' +
+    'padding:10px 14px;font:12px/1.4 -apple-system,sans-serif;z-index:99999;white-space:pre-wrap;';
+  el.textContent = '⚠ Lỗi tải ứng dụng: ' + (e.message || 'unknown') +
+    (e.filename ? ' — ' + e.filename.split('/').pop() + ':' + e.lineno : '');
+  document.body.appendChild(el);
+});
+</script>
 <script src="libs/pdf.min.js"></script>
 <script src="libs/tesseract.min.js"></script>
 <script src="libs/xlsx.full.min.js"></script>

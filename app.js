@@ -3,7 +3,9 @@
    Design by Hải Đăng
    ============================================================ */
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'libs/pdf.worker.min.js';
+if(typeof pdfjsLib !== 'undefined'){
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'libs/pdf.worker.min.js';
+}
 
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
@@ -215,6 +217,21 @@ function allMatches(re, text){
   while((m = g.exec(text)) !== null){ out.push(m[1].trim().replace(/\s+/g,' ')); }
   return out;
 }
+// Same as firstMatch, but skips a match whose immediately preceding text ends
+// with excludeWord (e.g. skip "Số tiền..." when only bare "Số:" is wanted).
+// Written without regex lookbehind, since older Safari/iOS (<16.4) throws a
+// SyntaxError on lookbehind and that would break this entire script.
+function firstMatchExcluding(re, text, excludeWord){
+  const g = new RegExp(re.source, re.flags.includes('g')?re.flags:re.flags+'g');
+  const excludeRe = new RegExp(excludeWord+'\\s*$', 'i');
+  let m;
+  while((m = g.exec(text)) !== null){
+    const before = text.slice(Math.max(0, m.index-15), m.index);
+    if(excludeRe.test(before)) continue;
+    return m[1].trim().replace(/\s+/g,' ');
+  }
+  return '';
+}
 
 function extractFields(text, fileName){
   const t = text.replace(/\r/g,'');
@@ -224,7 +241,7 @@ function extractFields(text, fileName){
   else if(/H[OÓ]A\s*ĐƠN\s*B[AÁ]N\s*H[AÀ]NG/i.test(t)) loaiHD = 'Hóa đơn bán hàng';
   else if(/H[OÓ]A\s*ĐƠN/i.test(t)) loaiHD = 'Hóa đơn điện tử';
 
-  const soHoaDon = firstMatch(/(?<!tiền\s)Số\s*[:.]?\s*(\d{1,10})\b/i, t);
+  const soHoaDon = firstMatchExcluding(/Số\s*[:.]?\s*(\d{1,10})\b/i, t, 'tiền');
   const kyHieu = firstMatch(/K[yý]\s*hi[eệ]u\s*[:.]?\s*([A-Za-z0-9\/\-]{4,15})/i, t);
   const ngayRaw = t.match(/Ng[aà]y\s*[:.]?\s*(\d{1,2})\s*(?:th[aá]ng|\/|-)\s*(\d{1,2})\s*(?:n[aă]m|\/|-)\s*(\d{2,4})/i);
   const ngayLap = ngayRaw ? `${ngayRaw[1].padStart(2,'0')}/${ngayRaw[2].padStart(2,'0')}/${ngayRaw[3]}` : '';
