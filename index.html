@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Trích xuất Hóa đơn OCR - VietinBank</title>
+<meta name="description" content="Công cụ trích xuất thông tin hóa đơn từ PDF/ảnh và xuất ra Excel, xử lý ngay trên trình duyệt.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-shell">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">VTB</div>
+      <div class="brand-text">
+        <h1>Trích xuất Hóa đơn (OCR)</h1>
+        <span>VietinBank</span>
+      </div>
+    </div>
+    <div class="badge-offline">🔒 Xử lý ngay trên trình duyệt — không upload dữ liệu lên server</div>
+  </header>
+
+  <main>
+
+    <div class="card">
+      <h2>1. Nhập file hóa đơn</h2>
+      <div class="sub">Hỗ trợ PDF và ảnh (JPG, PNG). Có thể chọn nhiều file cùng lúc.</div>
+
+      <div class="dropzone" id="dropzone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0L7 9m5-5l5 5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <p><b>Chạm để chọn file</b> hoặc kéo thả vào đây</p>
+        <div class="hint">PDF, JPG, PNG — chọn được nhiều file cùng lúc</div>
+        <input type="file" id="fileInput" multiple accept=".pdf,image/png,image/jpeg,image/jpg,image/webp">
+      </div>
+      <div class="capture-row">
+        <button class="ghost small" id="cameraBtn">📷 Chụp ảnh hóa đơn bằng camera</button>
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
+      </div>
+
+      <div class="toolbar">
+        <select id="langSelect">
+          <option value="vie+eng" selected>Tiếng Việt + English</option>
+          <option value="vie">Chỉ Tiếng Việt</option>
+          <option value="eng">Chỉ English</option>
+        </select>
+        <button class="secondary" id="startBtn" disabled>▶ Bắt đầu nhận diện</button>
+        <button class="ghost" id="clearBtn" disabled>Xoá danh sách</button>
+      </div>
+      <div id="queueSummary" style="font-size:12px;color:#6b7684;margin-top:6px;"></div>
+
+      <div class="queue" id="queueList"></div>
+    </div>
+
+    <div class="card">
+      <h2>2. Kết quả trích xuất</h2>
+      <div class="sub">Chạm vào từng ô để sửa nếu OCR nhận sai, sau đó xuất ra Excel.</div>
+
+      <div class="toolbar" style="margin-top:0;margin-bottom:10px;">
+        <button class="primary" id="exportBtn" disabled>⬇ Xuất file Excel</button>
+        <button class="ghost small" id="addRowBtn" disabled>+ Thêm dòng trống</button>
+      </div>
+      <div id="resultSummary" style="font-size:12px;color:#6b7684;margin-bottom:8px;"></div>
+
+      <div class="table-wrap">
+        <table class="results" id="resultsTable">
+          <thead>
+            <tr>
+              <th class="narrow">STT</th>
+              <th>Tên file</th>
+              <th>Loại hóa đơn</th>
+              <th>Số hóa đơn</th>
+              <th>Ký hiệu</th>
+              <th>Ngày lập</th>
+              <th>Đơn vị bán hàng</th>
+              <th>MST người bán</th>
+              <th>Địa chỉ người bán</th>
+              <th>Người mua / Đơn vị mua</th>
+              <th>MST người mua</th>
+              <th>Địa chỉ người mua</th>
+              <th>Hình thức TT</th>
+              <th>Cộng tiền hàng</th>
+              <th>Thuế suất GTGT</th>
+              <th>Tiền thuế GTGT</th>
+              <th>Tổng tiền thanh toán</th>
+              <th>Số tiền bằng chữ</th>
+              <th class="narrow"></th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody">
+            <tr><td colspan="19" class="empty-state">Chưa có dữ liệu. Hãy nhập file và bấm "Bắt đầu nhận diện".</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="footer-note">Mẹo: chạm vào ô để sửa nội dung trước khi xuất Excel. OCR có thể nhận sai với file scan mờ hoặc nghiêng.</div>
+    </div>
+
+  </main>
+
+  <footer>
+    Trích xuất hóa đơn OCR &middot; Xử lý ngay trên trình duyệt, không gửi dữ liệu lên server &middot; Design by <b>Hải Đăng</b>
+  </footer>
+</div>
+
+<div class="progress-modal-overlay" id="loadingOverlay">
+  <div class="progress-modal">
+    <div class="spinner"></div>
+    <h3 id="loadingTitle">Đang tải mô hình OCR...</h3>
+    <p id="loadingDesc">Lần đầu dùng cần tải dữ liệu ngôn ngữ (vài MB), các lần sau trình duyệt sẽ tự lưu cache.</p>
+  </div>
+</div>
+
+<script src="libs/pdf.min.js"></script>
+<script src="libs/tesseract.min.js"></script>
+<script src="libs/xlsx.full.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
